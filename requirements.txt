@@ -5,6 +5,11 @@ Flask-Migrate
 Flask-Marshmallow
 marshmallow-sqlalchemy
 flask-apispec
+sqlalchemy-utils
+intervals
+redis
+Flask-Login
+celery
 aniso8601==1.1.0
 Flask==0.11.1
 Flask-JWT==0.2.0

@@ -1,19 +1,36 @@
-from flask_apispec import marshal_with, use_kwargs as req_with, MethodResource as Resource
-from app.auth.jwt import AuthResource, jwt_require_all, jwt_required
+from flask_apispec import marshal_with, use_kwargs as req_with, MethodResource as Resource, doc
+from app.auth.jwt import jwt_require_all
 from .models import (
-    User, UserSchema,
+    User, UserSchema, UserLoginSchema,
     Role, RoleSchema,
     Schedule, ScheduleSchema
 )
 from app.extensions import api, db, docs
-from app.helpers import authdoc
+from app.helpers import authdoc, verify_password
+from flask_login import login_user
+from app.auth.redis_session import LoggedInUser
+from flask import abort
 
+
+@docs.register
+@doc(description='User Login', tags=['User'])
+@api.route('/user/login')
+class UserLoginAPI(Resource):
+
+    @marshal_with(UserSchema)
+    @req_with(UserLoginSchema)
+    def post(self, username, password):
+        user = User.query.filter(username==username).first_or_404()
+        if verify_password(password, user.password):
+            login_user(LoggedInUser(user))
+            return user
+        abort(401)
 
 @docs.register
 @authdoc(description='Users Description', tags=['User'])
 @api.route('/user')
 @jwt_require_all
-class UsersAPI(AuthResource):
+class UsersAPI(Resource):
 
     @marshal_with(UserSchema(many=True))
     def get(self):
@@ -43,8 +60,9 @@ class UserAPI(Resource):
 
 
     @marshal_with(UserSchema)
-    @req_with(UserSchema)
+    @req_with(UserSchema(partial=True))
     def put(self, user_id, **data):
+        print(data)
         user = User.query.get_or_404(user_id)
         user.update(**data)
         db.session.commit()

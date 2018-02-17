@@ -7,7 +7,11 @@ from flask_restful import Api
 from flask_jwt import JWTError
 from app.extensions import db
 from flask_apispec import doc
-
+from sqlalchemy_utils.types.range import RangeType
+from sqlalchemy.dialects.postgresql import DATERANGE
+from sqlalchemy.dialects.postgresql.base import ischema_names
+from sqlalchemy.dialects.postgresql.ranges import RangeOperators
+from sqlalchemy.types import UserDefinedType
 
 class AppApi(Api):
     """A simple class to keep the default flask_jwt.JWTError behaviour."""
@@ -30,6 +34,14 @@ class SurrogatePK(object):
     __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
+
+
+class TIMERANGE(RangeOperators, UserDefinedType):
+    def get_col_spec(self, **kw):
+        return 'timerange'
+
+ischema_names['timerange'] = TIMERANGE
+
 
 def reference_col(tablename, nullable=True, pk_name='id', **kwargs):
     """Column that adds primary key foreign key reference.

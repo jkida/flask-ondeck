@@ -60,9 +60,3 @@ def set_jwt_handlers(jwt):
     def load_user(payload):
         return models.User.query.filter_by(id=payload['user_id']).first()
 
-
-class AuthResource(MethodResource):
-
-    @jwt_required
-    def get(self, *args, **kwargs):
-        pass

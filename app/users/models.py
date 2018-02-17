@@ -4,9 +4,9 @@ import marshmallow
 from marshmallow_sqlalchemy import ModelConverter
 from app.extensions import db, ma
 from sqlalchemy.orm import relationship
-from app.helpers import SurrogatePK, reference_col
+from app.helpers import SurrogatePK, reference_col, TIMERANGE
 from sqlalchemy.dialects import postgresql
-
+from flask_login import UserMixin
 
 class Role(db.Model, SurrogatePK):
     """A role for a user."""
@@ -14,13 +14,14 @@ class Role(db.Model, SurrogatePK):
     __tablename__ = 'role'
     name = db.Column(db.String(80), unique=True, nullable=False)
     users = relationship('User', back_populates='role')
+    queue_schedules = relationship('RoleQueueSchedule', back_populates='role')
 
     def __repr__(self):
         """Represent instance as a unique string."""
         return '<Role({name})>'.format(name=self.name)
 
 
-class User(db.Model, SurrogatePK):
+class User(db.Model, SurrogatePK, UserMixin):
     """A user of the app."""
 
     __tablename__ = 'user'
@@ -60,7 +61,7 @@ class Schedule(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(), nullable=False)
     timezone = db.Column(db.String(), default='utc')
-    tranges = db.Column(postgresql.ARRAY(postgresql.TSTZRANGE))
+    trange = db.Column(TIMERANGE())
     _type = db.Column('type', db.String())
 
     __mapper_args__ = {
@@ -72,6 +73,7 @@ class Schedule(db.Model):
 class RoleQueueSchedule(Schedule):
     role_id = reference_col('role')
     queue_settings_id = reference_col('queue_setting')
+    role = relationship(Role, back_populates='queue_schedules')
     __mapper_args__ = {
         'polymorphic_identity': 'role_schedule'
     }
@@ -91,7 +93,7 @@ class QueueSettings(db.Model, SurrogatePK):
 class AppModelConverter(ModelConverter):
     SQLA_TYPE_MAPPING = dict(
         list(ModelConverter.SQLA_TYPE_MAPPING.items()) +
-        [(db.Time, marshmallow.fields.Str)]
+        [(TIMERANGE, marshmallow.fields.Str)]
     )
 
 
@@ -106,6 +108,15 @@ class UserSchema(ma.ModelSchema):
     def make_instance(self, data):
         return data
 
+
+class UserLoginSchema(ma.Schema):
+    username = ma.String(required=True)
+    password = ma.String(required=True)
+
+    class Meta:
+        strict = True
+
+
 class RoleSchema(ma.ModelSchema):
     class Meta:
         model = Role
@@ -118,11 +129,12 @@ class RoleSchema(ma.ModelSchema):
 
 class ScheduleSchema(ma.ModelSchema):
 
-    tranges = marshmallow.fields.List(marshmallow.fields.List(marshmallow.fields.DateTime))
+    # tranges = marshmallow.fields.List(marshmallow.fields.List(marshmallow.fields.Time))
     class Meta:
         model = Schedule
         strict = True
         sqla_session = db.session
+        model_converter = AppModelConverter
 
 
     @marshmallow.post_load

@@ -1,7 +1,7 @@
 import flask
 from . import extensions, config, users
 from .auth import jwt
-
+from app.auth.redis_session import RedisSessionInterface
 
 def create_app(config_name='default'):
     """Flask app factory
@@ -18,6 +18,7 @@ def create_app(config_name='default'):
 
     register_extensions(app)
     jwt.set_jwt_handlers(extensions.jwt)
+    app.session_interface = RedisSessionInterface()
 
     return app
 
@@ -33,6 +34,7 @@ def register_extensions(app):
 
     extensions.db.init_app(app)
     extensions.jwt.init_app(app)
+    extensions.login_manager.init_app(app)
     extensions.migrate.init_app(app, extensions.db)
     extensions.api.init_app(app)
     extensions.docs.init_app(app)
