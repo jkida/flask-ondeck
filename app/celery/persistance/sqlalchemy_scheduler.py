@@ -13,13 +13,13 @@ from sqlalchemy.orm import sessionmaker
 
 from celery.beat import Scheduler, ScheduleEntry
 from celery import schedules, current_app
-from celery.utils.timeutils import is_naive
+from celery.utils.time import is_naive
 
-from sqlalchemy_scheduler_models import DatabaseSchedulerEntry, CrontabSchedule, IntervalSchedule
+from .sqlalchemy_scheduler_models import DatabaseSchedulerEntry, CrontabSchedule, IntervalSchedule, engine
 
 
 # The schedule objects need to be handled within one scope
-Session = sessionmaker(autocommit=False, autoflush=False)
+Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 dbsession = Session()
 
 
@@ -111,6 +111,7 @@ class DatabaseScheduler(Scheduler):
     def __init__(self, app, **kwargs):
         self._last_timestamp = self._get_latest_change()
         Scheduler.__init__(self, app, **kwargs)
+
 
     def _get_latest_change(self):
         query = dbsession.query(DatabaseSchedulerEntry.date_changed)

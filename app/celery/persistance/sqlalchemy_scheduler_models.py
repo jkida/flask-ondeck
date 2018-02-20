@@ -9,12 +9,13 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.declarative import declarative_base
 import sqlalchemy.event
 from celery import schedules
+from app.extensions import db
 
-engine = sqlalchemy.create_engine('sqlite://')
+engine = sqlalchemy.create_engine('postgresql://ondeck:dev@localhost/ondeckmgr')
 Base = declarative_base(bind=engine)
 
 
-class CrontabSchedule(Base):
+class CrontabSchedule(db.Model):
     __tablename__ = 'celery_crontabs'
 
     id = Column(Integer, primary_key=True)
@@ -54,7 +55,7 @@ class CrontabSchedule(Base):
             return cls(**spec)
 
 
-class IntervalSchedule(Base):
+class IntervalSchedule(db.Model):
     __tablename__ = 'celery_intervals'
 
     id = Column(Integer, primary_key=True)
@@ -83,7 +84,7 @@ class IntervalSchedule(Base):
             return cls(every=every, period=period)
 
 
-class DatabaseSchedulerEntry(Base):
+class DatabaseSchedulerEntry(db.Model):
     __tablename__ = 'celery_schedules'
 
     id = Column(Integer, primary_key=True)

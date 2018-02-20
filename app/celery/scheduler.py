@@ -1,7 +1,21 @@
 from app.celery.main import app
-from app.celery.tasks import add
+from app.celery.persistance.sqlalchemy_scheduler_models import (
+    DatabaseSchedulerEntry,
+    IntervalSchedule
+)
+from app.celery.persistance.sqlalchemy_scheduler import dbsession
+
+
+# dse = DatabaseSchedulerEntry()
+# dse.name = 'Simple add task 3 2'
+# dse.task = 'app.celery.tasks.add'
+# dse.arguments = '[3, 2]'  # json string
+# dse.keyword_arguments = '{}'  # json string
+# dse.interval = IntervalSchedule(period='seconds', every=3)
+# dbsession.add(dse)
+# dbsession.commit()
+
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    # Calls test('hello') every 10 seconds.
-    sender.add_periodic_task(5.0, add.s(1, 2), name='1 plus 2')
+    pass

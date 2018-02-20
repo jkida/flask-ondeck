@@ -27,7 +27,9 @@ FLASK_JWT_VARS = {
 # flask-apispec
 FLASK_API_SPEC = {
     'APISPEC_TITLE': 'OnDeck Manager API',
-    'APISPEC_VERSION': 'v1'
+    'APISPEC_VERSION': 'v1',
+    'APISPEC_SWAGGER_UI_URL': '/swagger/',
+    'APISPEC_SWAGGER_URL': '/swagger-json/'
 }
 
 # another third party libs...

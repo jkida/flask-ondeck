@@ -1,5 +1,5 @@
 SQLAlchemy
-psycopg2
+psycopg2-binary
 Flask-SQLALchemy
 Flask-Migrate
 Flask-Marshmallow
