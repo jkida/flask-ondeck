@@ -9,5 +9,5 @@ def add(self, x, y):
     return x + y
 
 
-# Add new schedule
-
+def close_queue(queue_id):
+    pass

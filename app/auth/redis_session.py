@@ -5,9 +5,9 @@ from redis import Redis
 from werkzeug.datastructures import CallbackDict
 from flask.sessions import SessionInterface, SessionMixin
 from app.extensions import login_manager
-from app import helpers, models
+from app import models
 from flask_login import UserMixin
-from app.models import User, UserSchema
+from app.users.schemas import UserSchema
 
 class LoggedInUser(UserMixin):
     def __init__(self, user):
@@ -21,8 +21,6 @@ def set_session_handlers():
     def user_loader(id):
         user = models.User.query.filter_by(id=id).first()
         return LoggedInUser(user) if user else None
-
-
 
 
 class RedisSession(CallbackDict, SessionMixin):

@@ -1,5 +1,7 @@
 import flask
-from . import extensions, config, users
+from . import extensions, config, models
+from .users import resources
+from .queueboards import resources
 from .auth import jwt
 from app.auth.redis_session import RedisSessionInterface
 

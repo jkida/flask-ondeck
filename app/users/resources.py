@@ -1,9 +1,15 @@
 from flask_apispec import marshal_with, use_kwargs as req_with, MethodResource as Resource, doc
 from app.auth.jwt import jwt_require_all
 from .models import (
-    User, UserSchema, UserLoginSchema,
-    Role, RoleSchema,
-    Schedule, ScheduleSchema
+    User,
+    UserGroup,
+    Schedule,
+)
+from .schemas import (
+    UserSchema,
+    UserLoginSchema,
+    UserGroupSchema,
+    ScheduleSchema
 )
 from app.extensions import api, db, docs
 from app.helpers import authdoc, verify_password
@@ -26,6 +32,7 @@ class UserLoginAPI(Resource):
             return user
         abort(401)
 
+
 @docs.register
 @authdoc(description='Users Description', tags=['User'])
 @api.route('/user')
@@ -45,9 +52,8 @@ class UsersAPI(Resource):
         return user
 
 
-
 @docs.register
-@authdoc(description='Users Description', tags=['User'])
+@authdoc(description='User Description', tags=['User'])
 @api.route('/user/<int:user_id>')
 @jwt_require_all
 class UserAPI(Resource):
@@ -57,7 +63,6 @@ class UserAPI(Resource):
     @marshal_with(UserSchema)
     def get(self, user_id):
         return User.query.get_or_404(user_id)
-
 
     @marshal_with(UserSchema)
     @req_with(UserSchema(partial=True))
@@ -70,40 +75,41 @@ class UserAPI(Resource):
 
 
 @docs.register
-@authdoc(description='Roles Description', tags=['Role'])
+@authdoc(description='User Groups Description', tags=['User Group'])
 @api.route('/role')
 @jwt_require_all
-class RolesAPI(Resource):
+class UserGroupsAPI(Resource):
 
-    @marshal_with(RoleSchema(many=True))
+    @marshal_with(UserGroupSchema(many=True))
     def get(self):
-        return Role.query.all()
+        return UserGroup.query.all()
 
-    @marshal_with(RoleSchema)
-    @req_with(RoleSchema)
+    @marshal_with(UserGroupSchema)
+    @req_with(UserGroupSchema)
     def post(self, **data):
-        role = Role(**data)
-        db.session.add(role)
+        group = UserGroup(**data)
+        db.session.add(group)
         db.session.commit()
-        return role
+        return group
+
 
 @docs.register
-@authdoc(description='Role Description', tags=['Role'])
-@api.route('/role/<int:role_id>')
+@authdoc(description='User Group Description', tags=['User Group'])
+@api.route('/user-group/<int:user_group_id>')
 @jwt_require_all
-class RoleAPI(Resource):
+class UserGroupAPI(Resource):
 
-    @marshal_with(RoleSchema)
-    def get(self, role_id):
-        return Role.query.get_or_404(role_id)
+    @marshal_with(UserGroupSchema)
+    def get(self, user_group_id):
+        return UserGroup.query.get_or_404(user_group_id)
 
-    @marshal_with(RoleSchema)
-    @req_with(RoleSchema)
-    def put(self, role_id, **data):
-        role = Role.query.get_or_404(role_id)
-        role.update(**data)
+    @marshal_with(UserGroupSchema)
+    @req_with(UserGroupSchema)
+    def put(self, user_group_id, **data):
+        group = UserGroup.query.get_or_404(user_group_id)
+        group.update(**data)
         db.session.commit()
-        return role
+        return group
 
 
 @docs.register

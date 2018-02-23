@@ -5,7 +5,6 @@ Most of this code is lifted from django-celery project and adapted to run on
 SQLAlchemy.
 """
 
-from __future__ import absolute_import
 import datetime
 import time
 
@@ -15,7 +14,12 @@ from celery.beat import Scheduler, ScheduleEntry
 from celery import schedules, current_app
 from celery.utils.time import is_naive
 
-from .sqlalchemy_scheduler_models import DatabaseSchedulerEntry, CrontabSchedule, IntervalSchedule, engine
+from .sqlalchemy_scheduler_models import (
+    DatabaseSchedulerEntry,
+    CrontabSchedule,
+    IntervalSchedule,
+    engine
+)
 
 
 # The schedule objects need to be handled within one scope

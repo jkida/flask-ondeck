@@ -2,11 +2,9 @@ import datetime
 from functools import wraps
 
 from flask import current_app
-from app import helpers, models
-
+from app import helpers
+from app.users.models import User
 from flask_jwt import verify_jwt
-from flask_apispec import MethodResource
-
 
 
 def jwt_required(realm=None):
@@ -21,6 +19,7 @@ def jwt_required(realm=None):
             return fn(*args, **kwargs)
         return decorator
     return wrapper
+
 
 def jwt_require_all(cls):
     for meth in ('get', 'post', 'put', 'patch', 'delete'):
@@ -39,7 +38,7 @@ def set_jwt_handlers(jwt):
 
     @jwt.authentication_handler
     def authenticate(username, password):
-        user = models.User.query.filter(models.User.username == username).first()
+        user = User.query.filter(User.username == username).first()
         if user and helpers.verify_password(password, user.password):
             return user
         return None
@@ -58,5 +57,5 @@ def set_jwt_handlers(jwt):
 
     @jwt.user_handler
     def load_user(payload):
-        return models.User.query.filter_by(id=payload['user_id']).first()
+        return User.query.filter_by(id=payload['user_id']).first()
 

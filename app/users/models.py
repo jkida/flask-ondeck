@@ -3,19 +3,17 @@ import datetime as dt
 import marshmallow
 from marshmallow_sqlalchemy import ModelConverter
 from app.extensions import db, ma
-from sqlalchemy.orm import relationship
 from app.helpers import SurrogatePK, reference_col, TIMERANGE
-from sqlalchemy.dialects import postgresql
 from flask_login import UserMixin
 
-class Role(db.Model, SurrogatePK):
-    """A role for a user."""
 
-    __tablename__ = 'role'
+class UserGroup(db.Model, SurrogatePK):
+    """A group for a user."""
+
+    __tablename__ = 'user_group'
     name = db.Column(db.String(80), unique=True, nullable=False)
-    users = relationship('User', back_populates='role')
-    queue_schedules = relationship('RoleQueueSchedule', back_populates='role')
-
+    users = db.relationship('User', back_populates='user_group')
+    schedules = db.relationship('GroupSchedule', back_populates='user_group')
     def __repr__(self):
         """Represent instance as a unique string."""
         return '<Role({name})>'.format(name=self.name)
@@ -34,8 +32,8 @@ class User(db.Model, SurrogatePK, UserMixin):
     last_name = db.Column(db.String(30), nullable=True)
     active = db.Column(db.Boolean(), default=True)
     is_admin = db.Column(db.Boolean(), default=False)
-    role_id = reference_col('role')
-    role = relationship('Role', back_populates='users')
+    user_group_id = reference_col('user_group')
+    user_group = db.relationship('UserGroup', back_populates='users')
 
     # def set_password(self, password):
     #     """Set password."""
@@ -64,79 +62,24 @@ class Schedule(db.Model):
     trange = db.Column(TIMERANGE())
     _type = db.Column('type', db.String())
 
+
+
     __mapper_args__ = {
         'polymorphic_identity': 'schedule',
         'polymorphic_on': _type
     }
 
 
-class RoleQueueSchedule(Schedule):
-    role_id = reference_col('role')
-    queue_settings_id = reference_col('queue_setting')
-    role = relationship(Role, back_populates='queue_schedules')
+class GroupSchedule(Schedule):
+    user_group_id = reference_col('user_group')
+    queue_boards = db.relationship('QueueBoard', back_populates='schedule')
+
+    user_group = db.relationship("UserGroup", back_populates='schedules')
+
+
     __mapper_args__ = {
         'polymorphic_identity': 'role_schedule'
     }
 
-
-class QueueSettings(db.Model, SurrogatePK):
-    __tablename__ = 'queue_setting'
-
-    max_on_deck = db.Column(db.Integer(), default=0)
-    max_allowed_break = db.Column(db.Integer(), default=0)
-    min_wait_time = db.Column(db.Integer(), default=0)
-    max_duration = db.Column(db.Integer(), nullable=False)
-
-
 #### Schemas
 
-class AppModelConverter(ModelConverter):
-    SQLA_TYPE_MAPPING = dict(
-        list(ModelConverter.SQLA_TYPE_MAPPING.items()) +
-        [(TIMERANGE, marshmallow.fields.Str)]
-    )
-
-
-class UserSchema(ma.ModelSchema):
-    class Meta:
-        model = User
-        exclude = ('password',)
-        sqla_sesssion = db.session
-        strict = True
-
-    @marshmallow.post_load
-    def make_instance(self, data):
-        return data
-
-
-class UserLoginSchema(ma.Schema):
-    username = ma.String(required=True)
-    password = ma.String(required=True)
-
-    class Meta:
-        strict = True
-
-
-class RoleSchema(ma.ModelSchema):
-    class Meta:
-        model = Role
-        strict = True
-        sqla_session = db.session
-
-    @marshmallow.post_load
-    def make_instance(self, data):
-        return data
-
-class ScheduleSchema(ma.ModelSchema):
-
-    # tranges = marshmallow.fields.List(marshmallow.fields.List(marshmallow.fields.Time))
-    class Meta:
-        model = Schedule
-        strict = True
-        sqla_session = db.session
-        model_converter = AppModelConverter
-
-
-    @marshmallow.post_load
-    def make_instance(self, data):
-        return data

@@ -1,28 +1,29 @@
 from flask_apispec import marshal_with, use_kwargs as req_with, MethodResource as Resource
-from app.auth.jwt import AuthResource, jwt_require_all, jwt_required
+from app.auth.jwt import jwt_require_all
 from .models import (
-    User, UserSchema,
-    Role, RoleSchema,
-    Schedule, ScheduleSchema
+    QueueBoard
+)
+from .schemas import (
+    QueueBoardSchema
 )
 from app.extensions import api, db, docs
 from app.helpers import authdoc
 
 
 @docs.register
-@authdoc(description='Users Description', tags=['Queues'])
-@api.route('/user')
+@authdoc(description='QueueBoard Description', tags=['Queues'])
+@api.route('/queueboard')
 @jwt_require_all
-class QueuesAPI(AuthResource):
+class QueuesAPI(Resource):
 
-    @marshal_with(UserSchema(many=True))
+    @marshal_with(QueueBoardSchema(many=True))
     def get(self):
-        return User.query.all()
+        return QueueBoard.query.all()
 
-    @marshal_with(UserSchema)
-    @req_with(UserSchema)
+    @marshal_with(QueueBoardSchema)
+    @req_with(QueueBoardSchema)
     def post(self, **data):
-        user = User(**data)
-        db.session.add(user)
+        board = QueueBoard(**data)
+        db.session.add(board)
         db.session.commit()
-        return user
+        return board
