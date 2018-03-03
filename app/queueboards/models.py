@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from app.extensions import db, ma
-from app.helpers import SurrogatePK
-
+from app.extensions import db
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.mutable import MutableList
+from app.helpers import SurrogatePK, reference_col
+from app.users.models import GroupSchedule
 
 class QueueBoard(db.Model, SurrogatePK):
 
@@ -10,7 +12,10 @@ class QueueBoard(db.Model, SurrogatePK):
     is_active = db.Column(db.Boolean(), nullable=False, default=True)  # opened/closed
 
     schedule_id = db.Column(db.Integer(), db.ForeignKey('schedule.id'))
-    schedule = db.relationship('GroupSchedule', foreign_keys=schedule_id, back_populates='queue_boards')
+    schedule = db.relationship('QueueBoardSchedule', foreign_keys=schedule_id, back_populates='queue_board')
+
+    # members json
+    members = db.Column(MutableList.as_mutable(JSONB()))  # mutation tracking
 
     # settings
     max_on_deck = db.Column(db.Integer(), default=0)
@@ -21,3 +26,10 @@ class QueueBoard(db.Model, SurrogatePK):
     def __repr__(self):
         """Represent instance as a unique string."""
         return '<QueueBoard({name})>'.format(name=self.name)
+
+
+class QueueBoardSchedule(GroupSchedule):
+    queue_board = db.relationship("QueueBoard", uselist=False, back_populates="schedule")
+    __mapper_args__ = {
+        'polymorphic_identity': 'queueboard_schedule'
+    }

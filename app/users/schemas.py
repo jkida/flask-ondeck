@@ -1,15 +1,7 @@
 import marshmallow
-from marshmallow_sqlalchemy import ModelConverter
 from app.extensions import db, ma
-from .models import User, UserGroup, Schedule
-from app.helpers import TIMERANGE
-
-
-class AppModelConverter(ModelConverter):
-    SQLA_TYPE_MAPPING = dict(
-        list(ModelConverter.SQLA_TYPE_MAPPING.items()) +
-        [(TIMERANGE, marshmallow.fields.Str)]
-    )
+from app.helpers import TimeRangeModelConverter
+from .models import User, UserGroup, Schedule, GroupSchedule
 
 
 class UserSchema(ma.ModelSchema):
@@ -19,9 +11,9 @@ class UserSchema(ma.ModelSchema):
         sqla_sesssion = db.session
         strict = True
 
-    @marshmallow.post_load
-    def make_instance(self, data):
-        return data
+    # @marshmallow.post_load
+    # def make_instance(self, data):
+    #     return data
 
 
 class UserLoginSchema(ma.Schema):
@@ -38,20 +30,33 @@ class UserGroupSchema(ma.ModelSchema):
         strict = True
         sqla_session = db.session
 
-    @marshmallow.post_load
-    def make_instance(self, data):
-        return data
+    # @marshmallow.post_load
+    # def make_instance(self, data):
+    #     return data
 
 
 class ScheduleSchema(ma.ModelSchema):
-    tranges = marshmallow.fields.List(marshmallow.fields.List(marshmallow.fields.Time))
     class Meta:
         model = Schedule
         strict = True
         sqla_session = db.session
-        model_converter = AppModelConverter
+        model_converter = TimeRangeModelConverter
 
 
-    @marshmallow.post_load
-    def make_instance(self, data):
-        return data
+    # @marshmallow.post_load
+    # def make_instance(self, data):
+    #     return data
+
+
+class GroupScheduleSchema(ma.ModelSchema):
+    class Meta:
+        model = GroupSchedule
+        strict = True
+        sqla_session = db.session
+        model_converter = TimeRangeModelConverter
+
+
+    # @marshmallow.post_load
+    # def make_instance(self, data):
+    #     return data
+

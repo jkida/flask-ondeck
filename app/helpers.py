@@ -1,17 +1,20 @@
 import collections
+import re
 import functools
 import json
 import flask
+import datetime as dt
 from passlib import hash
 from flask_restful import Api
 from flask_jwt import JWTError
 from app.extensions import db
 from flask_apispec import doc
-from sqlalchemy_utils.types.range import RangeType
-from sqlalchemy.dialects.postgresql import DATERANGE
+import marshmallow
+from marshmallow_sqlalchemy import ModelConverter
 from sqlalchemy.dialects.postgresql.base import ischema_names
 from sqlalchemy.dialects.postgresql.ranges import RangeOperators
 from sqlalchemy.types import UserDefinedType
+import psycopg2.extras
 
 class AppApi(Api):
     """A simple class to keep the default flask_jwt.JWTError behaviour."""
@@ -35,6 +38,8 @@ class SurrogatePK(object):
 
     id = db.Column(db.Integer, primary_key=True)
 
+class TimeRange(psycopg2.extras.Range):
+    pass
 
 class TIMERANGE(RangeOperators, UserDefinedType):
     def get_col_spec(self, **kw):
@@ -42,6 +47,26 @@ class TIMERANGE(RangeOperators, UserDefinedType):
 
 ischema_names['timerange'] = TIMERANGE
 
+
+class MarshmallowTimeRange(marshmallow.fields.Field):
+    def _deserialize(self, value, attr, obj):
+        open_hour, open_min,\
+            close_hour, close_min = re.compile('\d+').findall(value)
+
+        return TimeRange(dt.time(int(open_hour), int(open_min)),
+                         dt.time(int(close_hour), int(close_min)))
+
+
+    def _serialize(self, value, attr, obj):
+        return "[{}, {}]".format(value.lower.strftime('%H:%M'),
+                                 value.upper.strftime('%H:%M'))
+
+
+class TimeRangeModelConverter(ModelConverter):
+    SQLA_TYPE_MAPPING = dict(
+        list(ModelConverter.SQLA_TYPE_MAPPING.items()) +
+        [(TIMERANGE, MarshmallowTimeRange)]
+    )
 
 def reference_col(tablename, nullable=True, pk_name='id', **kwargs):
     """Column that adds primary key foreign key reference.

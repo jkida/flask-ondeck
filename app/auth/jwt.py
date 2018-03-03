@@ -4,6 +4,7 @@ from functools import wraps
 from flask import current_app
 from app import helpers
 from app.users.models import User
+
 from flask_jwt import verify_jwt
 
 

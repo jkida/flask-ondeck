@@ -72,13 +72,11 @@ class Schedule(db.Model):
 
 class GroupSchedule(Schedule):
     user_group_id = reference_col('user_group')
-    queue_boards = db.relationship('QueueBoard', back_populates='schedule')
-
     user_group = db.relationship("UserGroup", back_populates='schedules')
 
 
     __mapper_args__ = {
-        'polymorphic_identity': 'role_schedule'
+        'polymorphic_identity': 'group_schedule'
     }
 
 #### Schemas

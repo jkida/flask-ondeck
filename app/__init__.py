@@ -3,7 +3,10 @@ from . import extensions, config, models
 from .users import resources
 from .queueboards import resources
 from .auth import jwt
-from app.auth.redis_session import RedisSessionInterface
+from app.auth.redis_session import RedisSessionInterface, set_session_handlers
+from .helpers import TimeRange
+from psycopg2.extras import register_range
+
 
 def create_app(config_name='default'):
     """Flask app factory
@@ -19,8 +22,18 @@ def create_app(config_name='default'):
     config.config[config_name](app)
 
     register_extensions(app)
+
     jwt.set_jwt_handlers(extensions.jwt)
     app.session_interface = RedisSessionInterface()
+    set_session_handlers()
+
+    @app.before_first_request
+    def add_time_range_type():
+        conn = extensions.db.engine.raw_connection()
+        cur = conn.cursor()
+        register_range('timerange', TimeRange, cur, globally=True)
+        cur.close()
+        conn.close()
 
     return app
 

@@ -10,7 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import sqlalchemy.event
 from celery import schedules
 from app.extensions import db
-from app.users.models import GroupSchedule
+from app.queueboards.models import QueueBoardSchedule
 
 engine = sqlalchemy.create_engine('postgresql://ondeck:dev@localhost/ondeckmgr')
 Base = declarative_base(bind=engine)
@@ -106,7 +106,7 @@ class DatabaseSchedulerEntry(db.Model):
 
     board_schedule_id = Column(Integer, ForeignKey('schedule.id'))
 
-    board_schedule = relationship(GroupSchedule)
+    board_schedule = relationship(QueueBoardSchedule)
     interval = relationship(IntervalSchedule)
     crontab = relationship(CrontabSchedule)
 

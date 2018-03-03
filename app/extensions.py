@@ -5,6 +5,7 @@ from flask_sqlalchemy import Model, SQLAlchemy
 class ORMModel(Model):
     def update(self, **data):
         for key, value in data.items():
+            print
             setattr(self, key, value)
 
 db = SQLAlchemy(model_class=ORMModel)
